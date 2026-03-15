@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>isko_ace — Monteur Vidéo</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:        #0a0a0c;
+      --bg2:       #111116;
+      --bg3:       #18181f;
+      --border:    rgba(255,255,255,0.07);
+      --accent:    #e8c87a;
+      --accent2:   #c0392b;
+      --text:      #e8e6e0;
+      --muted:     #6b6b7a;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+      --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    section { padding: 100px 0; }
+
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* UTILITY */
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 48px;
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 20px 0;
+      background: linear-gradient(to bottom, rgba(10,10,12,0.95) 0%, transparent 100%);
+      transition: background var(--transition);
+    }
+    nav.scrolled {
+      background: rgba(10,10,12,0.97);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-burger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+    .nav-burger span {
+      display: block;
+      width: 24px;
+      height: 1.5px;
+      background: var(--text);
+      transition: var(--transition);
+    }
+    .nav-burger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav-burger.open span:nth-child(2) { opacity: 0; }
+    .nav-burger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+    .nav-mobile {
+      display: none;
+      flex-direction: column;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile a {
+      padding: 16px 32px;
+      font-size: 14px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      transition: color var(--transition), background var(--transition);
+    }
+    .nav-mobile a:hover { color: var(--accent); background: var(--bg3); }
+
+    /* HERO */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding: 120px 0 80px;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 60% at 80% 50%, rgba(232,200,122,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(192,57,43,0.05) 0%, transparent 70%),
+        var(--bg);
+    }
+    .filmstrip {
+      position: absolute;
+      top: 0; right: 0;
+      height: 100%;
+      width: 64px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0.06;
+    }
+    .filmstrip-hole {
+      flex: 1;
+      border: 1px solid var(--text);
+      margin: 4px 8px;
+      border-radius: 2px;
+    }
+    .hero-content { position: relative; z-index: 2; }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--accent);
+    }
+    .hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(72px, 14vw, 160px);
+      line-height: 0.9;
+      letter-spacing: -1px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 5vw, 52px);
+      letter-spacing: 3px;
+      color: transparent;
+      -webkit-text-stroke: 1px var(--muted);
+      margin-bottom: 32px;
+    }
+    .hero-tagline {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--muted);
+      font-weight: 300;
+      font-style: italic;
+      max-width: 480px;
+      margin-bottom: 48px;
+      line-height: 1.6;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 36px;
+      background: var(--accent);
+      color: #0a0a0c;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: background var(--transition), gap var(--transition);
+      text-decoration: none;
+    }
+    .hero-cta:hover { background: #f0d48a; gap: 20px; }
+    .hero-scroll {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      z-index: 2;
+    }
+    .hero-scroll-line {
+      width: 1px;
+      height: 48px;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    /* VIDEOS */
+    #videos {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    .video-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: transform var(--transition), border-color var(--transition);
+    }
+    .video-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(232,200,122,0.25);
+    }
+    .video-wrapper {
+      position: relative;
+      padding-top: 56.25%;
+      background: #000;
+    }
+    .video-wrapper.shorts {
+      padding-top: 177.78%;
+    }
+    .video-wrapper iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .video-info { padding: 20px 22px 22px; }
+    .video-info h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .video-info p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* COMPETENCES */
+    #competences { background: var(--bg); }
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+    }
+    .skills-group h3 {
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .skill-bar-list { display: flex; flex-direction: column; gap: 18px; }
+    .skill-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .skill-bar-label span { color: var(--muted); font-size: 12px; }
+    .skill-bar-track {
+      height: 2px;
+      background: var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .skill-bar-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tags-wrap { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .tag {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      background: var(--bg2);
+      transition: border-color var(--transition), color var(--transition), background var(--transition);
+      cursor: default;
+    }
+    .tag:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(232,200,122,0.05);
+    }
+
+    /* CONTACT */
+    #contact {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 80px;
+      align-items: start;
+    }
+    .contact-info p {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 36px;
+    }
+    .contact-links { display: flex; flex-direction: column; gap: 16px; }
+    .contact-link-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 14px;
+      color: var(--muted);
+      transition: color var(--transition);
+    }
+    .contact-link-item:hover { color: var(--accent); }
+    .contact-link-item svg {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+    .contact-form { display: flex; flex-direction: column; gap: 0; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-top: none;
+    }
+    .form-group:nth-child(2) { border-left: none; }
+    .contact-form .form-group:first-of-type,
+    .form-row { border-top: 1px solid var(--border); }
+    .form-group label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 14px 20px 4px;
+    }
+    .form-group input,
+    .form-group textarea {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 300;
+      padding: 8px 20px 16px;
+      resize: none;
+      caret-color: var(--accent);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: rgba(107,107,122,0.5); }
+    .form-group:focus-within {
+      border-color: rgba(232,200,122,0.4);
+      background: rgba(232,200,122,0.02);
+    }
+    .form-group textarea { min-height: 140px; }
+    .form-submit {
+      margin-top: -1px;
+      padding: 18px 36px;
+      background: var(--accent);
+      color: #0a0a0c;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: background var(--transition);
+      align-self: flex-start;
+    }
+    .form-submit:hover { background: #f0d48a; }
+    .form-success {
+      display: none;
+      padding: 20px;
+      border: 1px solid rgba(232,200,122,0.4);
+      background: rgba(232,200,122,0.05);
+      color: var(--accent);
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: var(--muted);
+    }
+    .footer-copy { font-size: 12px; color: var(--muted); opacity: 0.5; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .nav-burger { display: flex; }
+      .video-grid { grid-template-columns: 1fr; }
+      .skills-grid { grid-template-columns: 1fr; gap: 36px; }
+      .contact-layout { grid-template-columns: 1fr; gap: 48px; }
+      .form-row { grid-template-columns: 1fr; }
+      .form-row .form-group:nth-child(2) { border-left: 1px solid var(--border); border-top: none; }
+      .filmstrip { display: none; }
+    }
+    @media (max-width: 600px) {
+      .container { padding: 0 20px; }
+      section { padding: 72px 0; }
+      .hero-name { font-size: clamp(56px, 18vw, 100px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <div class="nav-logo">isko_ace<span>.</span></div>
+    <ul class="nav-links">
+      <li><a href="#videos">Montage</a></li>
+      <li><a href="#competences">Compétences</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="nav-burger" id="burger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="nav-mobile" id="mobile-menu">
+    <a href="#videos" class="mobile-link">Montage</a>
+    <a href="#competences" class="mobile-link">Compétences</a>
+    <a href="#contact" class="mobile-link">Contact</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="filmstrip" aria-hidden="true">
+    <div class="filmstrip-hole"></div><div class="filmstrip-hole"></div>
+    <div class="filmstrip-hole"></div><div class="filmstrip-hole"></div>
+    <div class="filmstrip-hole"></div><div class="filmstrip-hole"></div>
+    <div class="filmstrip-hole"></div><div class="filmstrip-hole"></div>
+    <div class="filmstrip-hole"></div><div class="filmstrip-hole"></div>
+  </div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Monteur Vidéo &amp; Créateur de Contenu</div>
+      <h1 class="hero-name">isko_ace</h1>
+      <div class="hero-title">Monteur Vidéo</div>
+      <!-- ✏️ REMPLACER : accroche personnelle -->
+      <p class="hero-tagline">
+        « Je transforme vos rushes en récits qui captivent — du premier cut à l'export final. »
+      </p>
+      <a href="#contact" class="hero-cta">
+        Travaillons ensemble
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="hero-scroll" aria-hidden="true">
+    <div class="hero-scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- MONTAGE VIDÉO -->
+<section id="videos">
+  <div class="container">
+    <p class="section-label reveal">Showreel</p>
+    <h2 class="section-title reveal">Montage<br>Vidéo</h2>
+
+    <div class="video-grid">
+
+      <!-- Vidéo 1 -->
+      <div class="video-card reveal">
+        <div class="video-wrapper">
+          <iframe src="https://www.youtube.com/embed/gGvzk3UlEQI"
+            title="Montage 1 — isko_ace"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+        <div class="video-info">
+          <!-- ✏️ REMPLACER : titre et description -->
+          <h3>Montage #1</h3>
+          <p>Travail de montage et de rythme — synchronisation, transitions et narration visuelle.</p>
+        </div>
+      </div>
+
+      <!-- Vidéo 2 -->
+      <div class="video-card reveal reveal-delay-1">
+        <div class="video-wrapper">
+          <iframe src="https://www.youtube.com/embed/gYhEpUOvE4o"
+            title="Montage 2 — isko_ace"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+        <div class="video-info">
+          <!-- ✏️ REMPLACER -->
+          <h3>Montage #2</h3>
+          <p>Maîtrise de l'étalonnage, du sound design et du rythme éditorial.</p>
+        </div>
+      </div>
+
+      <!-- Vidéo 3 — Short 9:16 -->
+      <div class="video-card reveal reveal-delay-2">
+        <div class="video-wrapper shorts">
+          <iframe src="https://www.youtube.com/embed/qJi5kZFmV-0"
+            title="Short — isko_ace"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+        <div class="video-info">
+          <!-- ✏️ REMPLACER -->
+          <h3>Short</h3>
+          <p>Format court dynamique — narration percutante en quelques secondes.</p>
+        </div>
+      </div>
+
+      <!-- Vidéo 4 -->
+      <div class="video-card reveal reveal-delay-3">
+        <div class="video-wrapper">
+          <iframe src="https://www.youtube.com/embed/FfEAwsbVE0w"
+            title="Montage 4 — isko_ace"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+        <div class="video-info">
+          <!-- ✏️ REMPLACER -->
+          <h3>Montage #4</h3>
+          <p>Direction artistique soignée — mise en scène, colorimétrie et fluidité des coupes.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- COMPÉTENCES -->
+<section id="competences">
+  <div class="container">
+    <p class="section-label reveal">Savoir-faire</p>
+    <h2 class="section-title reveal">Compétences</h2>
+
+    <div class="skills-grid">
+
+      <div class="skills-group reveal">
+        <h3>Logiciels &amp; Techniques</h3>
+        <div class="skill-bar-list">
+          <!-- ✏️ REMPLACER les niveaux en % -->
+          <div class="skill-bar-item">
+            <div class="skill-bar-label">Adobe Premiere Pro <span>Expert</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="95"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-label">After Effects <span>Avancé</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="85"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-label">DaVinci Resolve <span>Avancé</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="80"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-label">Colorimétrie <span>Intermédiaire</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="72"></div></div>
+          </div>
+          <div class="skill-bar-item">
+            <div class="skill-bar-label">Mixage Son <span>Intermédiaire</span></div>
+            <div class="skill-bar-track"><div class="skill-bar-fill" data-width="68"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skills-group reveal reveal-delay-1">
+        <h3>Créativité &amp; Communication</h3>
+        <div class="tags-wrap">
+          <!-- ✏️ REMPLACER ou ajouter des tags -->
+          <span class="tag">Storytelling</span>
+          <span class="tag">Direction artistique</span>
+          <span class="tag">Réseaux sociaux</span>
+          <span class="tag">Motion Design</span>
+          <span class="tag">Respect des délais</span>
+          <span class="tag">Gestion de projet</span>
+          <span class="tag">YouTube / TikTok / Reels</span>
+          <span class="tag">Brief client</span>
+          <span class="tag">Storyboard</span>
+          <span class="tag">Musique &amp; Droits</span>
+          <span class="tag">Sous-titrage</span>
+          <span class="tag">Export multi-format</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT
+     ✏️ FORMSPREE :
+     1. Créez un compte gratuit sur https://formspree.io
+     2. New Form > donnez un nom > copiez l'ID (ex: xpwzabcd)
+     3. Remplacez XXXXXXXX dans l'action ci-dessous par votre ID -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-layout">
+
+      <div class="contact-info reveal">
+        <p class="section-label">Discutons</p>
+        <h2 class="section-title">Travaillons<br>Ensemble</h2>
+        <p>Un projet en tête ? Une deadline ? Un brief à partager ?<br>Je réponds sous 24h.</p>
+        <div class="contact-links">
+          <!-- ✏️ REMPLACER : votre email -->
+          <a href="mailto:contact@isko-ace.com" class="contact-link-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+            contact@isko-ace.com
+          </a>
+          <!-- ✏️ REMPLACER : votre URL LinkedIn -->
+          <a href="https://www.linkedin.com/in/isko-ace" target="_blank" rel="noopener" class="contact-link-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+            linkedin.com/in/isko-ace
+          </a>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-1">
+        <form class="contact-form" action="https://formspree.io/f/XXXXXXXX" method="POST" id="contact-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nom">Nom</label>
+              <input type="text" id="nom" name="nom" placeholder="Votre nom" required />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="votre@email.com" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="sujet">Sujet</label>
+            <input type="text" id="sujet" name="sujet" placeholder="De quoi s'agit-il ?" required />
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="Décrivez votre projet..." required></textarea>
+          </div>
+          <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+          <button type="submit" class="form-submit">Envoyer le message &rarr;</button>
+          <div class="form-success" id="form-success">
+            ✓ Message envoyé ! Je vous réponds dans les 24h.
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-logo">isko_ace<span style="color:var(--accent)">.</span></div>
+      <p class="footer-copy">© 2025 isko_ace — Tous droits réservés</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* Nav scroll */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  /* Hamburger */
+  const burger = document.getElementById('burger');
+  const mobileMenu = document.getElementById('mobile-menu');
+  burger.addEventListener('click', () => {
+    burger.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
+  });
+  document.querySelectorAll('.mobile-link').forEach(link => {
+    link.addEventListener('click', () => {
+      burger.classList.remove('open');
+      mobileMenu.classList.remove('open');
+    });
+  });
+
+  /* Scroll Reveal */
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+  /* Skill bars */
+  const barObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.skill-bar-fill').forEach((bar, i) => {
+          setTimeout(() => { bar.style.width = bar.getAttribute('data-width') + '%'; }, i * 120);
+        });
+        barObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  const skillsSection = document.querySelector('#competences');
+  if (skillsSection) barObs.observe(skillsSection);
+
+  /* Formspree AJAX */
+  const form = document.getElementById('contact-form');
+  const successMsg = document.getElementById('form-success');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('.form-submit');
+      btn.textContent = 'Envoi en cours…';
+      btn.disabled = true;
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' }
+        });
+        if (res.ok) {
+          form.reset();
+          successMsg.style.display = 'block';
+          btn.textContent = '✓ Envoyé';
+        } else {
+          btn.textContent = 'Erreur — réessayez';
+          btn.disabled = false;
+        }
+      } catch {
+        btn.textContent = 'Erreur réseau';
+        btn.disabled = false;
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
